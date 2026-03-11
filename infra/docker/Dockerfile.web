@@ -4,9 +4,10 @@ WORKDIR /app
 
 COPY apps/web/package.json apps/web/package-lock.json* ./
 
-RUN npm ci
+RUN if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; else npm install --legacy-peer-deps; fi
 
 COPY apps/web/ .
+RUN mkdir -p public
 
 EXPOSE 3000
 

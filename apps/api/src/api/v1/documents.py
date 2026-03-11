@@ -4,18 +4,22 @@ from __future__ import annotations
 
 import hashlib
 import uuid
+from pathlib import Path
 from typing import Optional
 
 import structlog
+from arq import ArqRedis
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.dependencies import get_db
+from src.core.dependencies import get_arq_pool, get_db
 from src.core.security import get_current_user, UserContext
 from src.models.entities import Chunk, Document, DocumentStatus, SourceType
 from src.schemas.api import DocumentResponse, DocumentUploadResponse
 from src.services.audit import audit_log
+
+UPLOADS_DIR = Path("/app/uploads")
 
 logger = structlog.get_logger()
 router = APIRouter()
@@ -26,6 +30,7 @@ async def upload_document(
     file: UploadFile = File(...),
     user: UserContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    arq: ArqRedis = Depends(get_arq_pool),
 ):
     """Upload a PDF document for indexing."""
     if not file.filename or not file.filename.lower().endswith(".pdf"):
@@ -37,7 +42,7 @@ async def upload_document(
     content = await file.read()
     content_hash = hashlib.sha256(content).hexdigest()
 
-    # Check for duplicates
+    # Return existing document if already indexed
     existing = await db.scalar(
         select(Document).where(
             Document.tenant_id == user.tenant_id,
@@ -49,6 +54,12 @@ async def upload_document(
             id=existing.id, status=existing.status.value, filename=file.filename
         )
 
+    # Determine local storage path (relative to UPLOADS_DIR)
+    relative_path = f"{user.tenant_id}/uploads/{uuid.uuid4()}/{file.filename}"
+    file_path = UPLOADS_DIR / relative_path
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_bytes(content)
+
     # Create document record
     doc = Document(
         tenant_id=user.tenant_id,
@@ -56,15 +67,14 @@ async def upload_document(
         title=file.filename,
         content_hash=content_hash,
         mime_type=file.content_type or "application/pdf",
-        blob_path=f"{user.tenant_id}/uploads/{uuid.uuid4()}/{file.filename}",
+        blob_path=relative_path,
         status=DocumentStatus.pending,
     )
     db.add(doc)
     await db.flush()
 
-    # TODO: Upload to Blob Storage
-    # TODO: Queue ingestion job via arq
-    # await queue.enqueue("ingest_document", doc_id=str(doc.id))
+    # Enqueue ingestion job
+    await arq.enqueue_job("ingest_document", str(doc.id))
 
     await audit_log(db, user, "document_upload", "document", str(doc.id), {"filename": file.filename})
 
@@ -160,8 +170,10 @@ async def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # TODO: Delete vectors from Qdrant
-    # TODO: Delete blob from storage
+    # Delete local file if it exists
+    file_path = UPLOADS_DIR / doc.blob_path
+    if file_path.exists():
+        file_path.unlink(missing_ok=True)
 
     await db.delete(doc)
     await audit_log(db, user, "document_delete", "document", str(doc.id))

@@ -3,6 +3,8 @@
 from typing import AsyncGenerator
 
 import redis.asyncio as aioredis
+from arq import ArqRedis
+from fastapi import Request
 from qdrant_client import AsyncQdrantClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,3 +35,8 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:
 async def get_qdrant() -> AsyncQdrantClient:
     """Qdrant client dependency."""
     return AsyncQdrantClient(url=settings.QDRANT_URL)
+
+
+def get_arq_pool(request: Request) -> ArqRedis:
+    """Return the shared arq job queue pool from app state."""
+    return request.app.state.arq_pool
