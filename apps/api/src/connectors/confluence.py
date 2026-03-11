@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 from datetime import datetime
-from typing import Optional
 
 import httpx
 import structlog
@@ -47,7 +46,7 @@ class ConfluenceConnector(BaseConnector):
             logger.error("Confluence connect failed", error=str(e))
             return False
 
-    async def sync(self, last_sync_at: Optional[datetime] = None) -> list[RawDocument]:
+    async def sync(self, last_sync_at: datetime | None = None) -> list[RawDocument]:
         """Sync pages from configured Confluence spaces."""
         documents = []
 
@@ -71,7 +70,8 @@ class ConfluenceConnector(BaseConnector):
                 params = {"space-id": space_id, "limit": 50, "body-format": "storage"}
                 if last_sync_at:
                     # Use CQL for delta sync
-                    cql = f'space="{space_key}" AND lastModified >= "{last_sync_at.strftime("%Y-%m-%d %H:%M")}"'
+                    cql_time = last_sync_at.strftime("%Y-%m-%d %H:%M")
+                    cql = f'space="{space_key}" AND lastModified >= "{cql_time}"'
                     search_resp = await client.get(
                         f"{self.base_url}/wiki/rest/api/content/search",
                         headers=self._auth_header(),
@@ -103,18 +103,23 @@ class ConfluenceConnector(BaseConnector):
                     page_id = str(page.get("id", ""))
                     title = page.get("title", "Untitled")
 
-                    documents.append(RawDocument(
-                        external_id=page_id,
-                        title=title,
-                        content=plain_text.encode("utf-8"),
-                        mime_type="text/plain",
-                        source_url=f"{self.base_url}/wiki/spaces/{space_key}/pages/{page_id}",
-                        metadata={
-                            "space_key": space_key,
-                            "labels": [l.get("name") for l in page.get("labels", {}).get("results", [])],
-                            "version": page.get("version", {}).get("number"),
-                        },
-                    ))
+                    documents.append(
+                        RawDocument(
+                            external_id=page_id,
+                            title=title,
+                            content=plain_text.encode("utf-8"),
+                            mime_type="text/plain",
+                            source_url=f"{self.base_url}/wiki/spaces/{space_key}/pages/{page_id}",
+                            metadata={
+                                "space_key": space_key,
+                                "labels": [
+                                    label.get("name")
+                                    for label in page.get("labels", {}).get("results", [])
+                                ],
+                                "version": page.get("version", {}).get("number"),
+                            },
+                        )
+                    )
 
         logger.info("Confluence sync complete", documents=len(documents))
         return documents

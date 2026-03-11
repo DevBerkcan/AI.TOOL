@@ -3,21 +3,31 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.dependencies import get_db
-from src.core.security import require_role, UserContext
+from src.core.security import UserContext, require_role
 from src.models.entities import (
-    AuditLog, Chunk, Connector, Document, ModelConfig,
-    QueryHistory, User, UserRole,
+    AuditLog,
+    Chunk,
+    Connector,
+    Document,
+    ModelConfig,
+    QueryHistory,
+    User,
+    UserRole,
 )
 from src.schemas.api import (
-    AuditLogResponse, DashboardStats, ModelConfigResponse,
-    ModelConfigUpdate, RoleUpdateRequest, UserListItem,
+    AuditLogResponse,
+    DashboardStats,
+    ModelConfigResponse,
+    ModelConfigUpdate,
+    RoleUpdateRequest,
+    UserListItem,
 )
 
 router = APIRouter()
@@ -30,7 +40,7 @@ async def dashboard_stats(
 ):
     """Dashboard statistics."""
     t = user.tenant_id
-    seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    seven_days_ago = datetime.now(UTC) - timedelta(days=7)
 
     docs = await db.scalar(select(func.count(Document.id)).where(Document.tenant_id == t))
     chunks = await db.scalar(select(func.count(Chunk.id)).where(Chunk.tenant_id == t))
@@ -41,7 +51,9 @@ async def dashboard_stats(
     )
     users = await db.scalar(select(func.count(User.id)).where(User.tenant_id == t))
     connectors = await db.scalar(
-        select(func.count(Connector.id)).where(Connector.tenant_id == t, Connector.is_active == True)
+        select(func.count(Connector.id)).where(
+            Connector.tenant_id == t, Connector.is_active
+        )
     )
 
     return DashboardStats(
@@ -64,8 +76,12 @@ async def list_users(
     )
     return [
         UserListItem(
-            id=u.id, email=u.email, display_name=u.display_name,
-            role=u.role.value, is_active=u.is_active, last_login=u.last_login,
+            id=u.id,
+            email=u.email,
+            display_name=u.display_name,
+            role=u.role.value,
+            is_active=u.is_active,
+            last_login=u.last_login,
         )
         for u in result.all()
     ]
@@ -105,9 +121,13 @@ async def list_audit_logs(
     result = await db.scalars(query)
     return [
         AuditLogResponse(
-            id=a.id, user_id=a.user_id, action=a.action,
-            resource_type=a.resource_type, resource_id=a.resource_id,
-            details=a.details or {}, ip_address=a.ip_address,
+            id=a.id,
+            user_id=a.user_id,
+            action=a.action,
+            resource_type=a.resource_type,
+            resource_id=a.resource_id,
+            details=a.details or {},
+            ip_address=a.ip_address,
             created_at=a.created_at,
         )
         for a in result.all()
@@ -120,13 +140,15 @@ async def list_model_configs(
     db: AsyncSession = Depends(get_db),
 ):
     """List AI model configurations."""
-    result = await db.scalars(
-        select(ModelConfig).where(ModelConfig.tenant_id == user.tenant_id)
-    )
+    result = await db.scalars(select(ModelConfig).where(ModelConfig.tenant_id == user.tenant_id))
     return [
         ModelConfigResponse(
-            id=m.id, purpose=m.purpose.value, provider=m.provider,
-            model_name=m.model_name, is_primary=m.is_primary, is_fallback=m.is_fallback,
+            id=m.id,
+            purpose=m.purpose.value,
+            provider=m.provider,
+            model_name=m.model_name,
+            is_primary=m.is_primary,
+            is_fallback=m.is_fallback,
         )
         for m in result.all()
     ]

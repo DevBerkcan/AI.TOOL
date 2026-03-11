@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from anthropic import AsyncAnthropic
 
 from src.providers.base import (
-    ChatProvider, ChatResponse, Message, StreamChunk, Usage,
+    ChatProvider,
+    ChatResponse,
+    Message,
+    StreamChunk,
+    Usage,
 )
 
 
@@ -20,8 +24,11 @@ class ClaudeChatProvider(ChatProvider):
         self.client = AsyncAnthropic(api_key=api_key)
 
     async def complete(
-        self, messages: list[Message], model: str,
-        temperature: float = 0.7, max_tokens: int = 2000,
+        self,
+        messages: list[Message],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
     ) -> ChatResponse:
         # Extract system message (Claude handles it separately)
         system = ""
@@ -56,8 +63,11 @@ class ClaudeChatProvider(ChatProvider):
         )
 
     async def stream(
-        self, messages: list[Message], model: str,
-        temperature: float = 0.7, max_tokens: int = 2000,
+        self,
+        messages: list[Message],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
     ) -> AsyncIterator[StreamChunk]:
         system = ""
         chat_messages = []

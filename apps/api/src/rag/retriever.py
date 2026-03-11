@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import structlog
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchValue
+from qdrant_client.models import FieldCondition, Filter, MatchValue
 
 from src.core.config import settings
 from src.providers.factory import ProviderFactory
@@ -59,16 +59,18 @@ async def retrieve_chunks(
     chunks = []
     for hit in results:
         payload = hit.payload or {}
-        chunks.append({
-            "chunk_id": hit.id,
-            "content": payload.get("content", ""),
-            "document_id": payload.get("document_id", ""),
-            "title": payload.get("title", ""),
-            "source_url": payload.get("source_url"),
-            "source_type": payload.get("source_type"),
-            "chunk_index": payload.get("chunk_index", 0),
-            "score": hit.score,
-        })
+        chunks.append(
+            {
+                "chunk_id": hit.id,
+                "content": payload.get("content", ""),
+                "document_id": payload.get("document_id", ""),
+                "title": payload.get("title", ""),
+                "source_url": payload.get("source_url"),
+                "source_type": payload.get("source_type"),
+                "chunk_index": payload.get("chunk_index", 0),
+                "score": hit.score,
+            }
+        )
 
     logger.info("Retrieval complete", query_len=len(query), results=len(chunks))
     return chunks

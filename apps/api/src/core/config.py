@@ -1,7 +1,6 @@
 """Application configuration from environment variables."""
 
 from functools import lru_cache
-from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

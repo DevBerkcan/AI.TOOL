@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
@@ -20,10 +20,10 @@ UPLOADS_DIR = Path("/app/uploads")
 async def ingest_document(ctx: dict, document_id: str):
     """Full ingestion pipeline: parse → chunk → embed → index."""
     from src.core.database import async_session
-    from src.models.entities import Chunk, Document, DocumentStatus
     from src.ingestion.chunker import chunk_document
     from src.ingestion.embedder import embed_and_index_chunks
     from src.ingestion.parser import parse_document
+    from src.models.entities import Chunk, Document, DocumentStatus
 
     logger.info("Starting document ingestion", document_id=document_id)
 
@@ -74,19 +74,21 @@ async def ingest_document(ctx: dict, document_id: str):
 
             # 5. Persist chunk records to PostgreSQL
             for c in chunks:
-                db.add(Chunk(
-                    id=uuid.uuid4(),
-                    tenant_id=doc.tenant_id,
-                    document_id=doc.id,
-                    chunk_index=c.chunk_index,
-                    content=c.content,
-                    token_count=c.token_count,
-                    metadata=c.metadata,
-                    vector_id=c.chunk_id,
-                ))
+                db.add(
+                    Chunk(
+                        id=uuid.uuid4(),
+                        tenant_id=doc.tenant_id,
+                        document_id=doc.id,
+                        chunk_index=c.chunk_index,
+                        content=c.content,
+                        token_count=c.token_count,
+                        metadata=c.metadata,
+                        vector_id=c.chunk_id,
+                    )
+                )
 
             doc.status = DocumentStatus.indexed
-            doc.last_synced_at = datetime.now(timezone.utc)
+            doc.last_synced_at = datetime.now(UTC)
             await db.commit()
 
             logger.info(
@@ -118,14 +120,14 @@ async def run_connector_sync(ctx: dict, sync_job_id: str):
             return
 
         job.status = SyncJobStatus.running
-        job.started_at = datetime.now(timezone.utc)
+        job.started_at = datetime.now(UTC)
         await db.commit()
 
         # TODO: load connector, run connector.sync(), queue ingest_document per document
         logger.info("Connector sync complete (stub)", sync_job_id=sync_job_id)
 
         job.status = SyncJobStatus.completed
-        job.completed_at = datetime.now(timezone.utc)
+        job.completed_at = datetime.now(UTC)
         await db.commit()
 
 

@@ -10,11 +10,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.dependencies import get_db
-from src.core.security import get_current_user, require_role, UserContext
+from src.core.security import UserContext, get_current_user, require_role
 from src.models.entities import Connector, SourceType, SyncJob, SyncJobStatus
 from src.schemas.api import (
-    ConnectorCreate, ConnectorResponse, ConnectorUpdate,
-    SyncJobResponse, SyncTriggerResponse,
+    ConnectorCreate,
+    ConnectorResponse,
+    ConnectorUpdate,
+    SyncJobResponse,
+    SyncTriggerResponse,
 )
 from src.services.audit import audit_log
 
@@ -35,8 +38,12 @@ async def list_connectors(
     )
     return [
         ConnectorResponse(
-            id=c.id, type=c.type.value, name=c.name, is_active=c.is_active,
-            last_sync_at=c.last_sync_at, sync_interval_min=c.sync_interval_min,
+            id=c.id,
+            type=c.type.value,
+            name=c.name,
+            is_active=c.is_active,
+            last_sync_at=c.last_sync_at,
+            sync_interval_min=c.sync_interval_min,
             created_at=c.created_at,
         )
         for c in result.all()
@@ -64,12 +71,18 @@ async def create_connector(
     db.add(connector)
     await db.flush()
 
-    await audit_log(db, user, "connector_create", "connector", str(connector.id), {"type": body.type})
+    await audit_log(
+        db, user, "connector_create", "connector", str(connector.id), {"type": body.type}
+    )
 
     return ConnectorResponse(
-        id=connector.id, type=connector.type.value, name=connector.name,
-        is_active=connector.is_active, last_sync_at=None,
-        sync_interval_min=connector.sync_interval_min, created_at=connector.created_at,
+        id=connector.id,
+        type=connector.type.value,
+        name=connector.name,
+        is_active=connector.is_active,
+        last_sync_at=None,
+        sync_interval_min=connector.sync_interval_min,
+        created_at=connector.created_at,
     )
 
 
@@ -82,9 +95,7 @@ async def update_connector(
 ):
     """Update connector configuration."""
     conn = await db.scalar(
-        select(Connector).where(
-            Connector.id == connector_id, Connector.tenant_id == user.tenant_id
-        )
+        select(Connector).where(Connector.id == connector_id, Connector.tenant_id == user.tenant_id)
     )
     if not conn:
         raise HTTPException(status_code=404, detail="Connector not found")
@@ -110,9 +121,7 @@ async def delete_connector(
 ):
     """Delete connector and all associated documents."""
     conn = await db.scalar(
-        select(Connector).where(
-            Connector.id == connector_id, Connector.tenant_id == user.tenant_id
-        )
+        select(Connector).where(Connector.id == connector_id, Connector.tenant_id == user.tenant_id)
     )
     if not conn:
         raise HTTPException(status_code=404, detail="Connector not found")
@@ -130,9 +139,7 @@ async def trigger_sync(
 ):
     """Manually trigger a sync job."""
     conn = await db.scalar(
-        select(Connector).where(
-            Connector.id == connector_id, Connector.tenant_id == user.tenant_id
-        )
+        select(Connector).where(Connector.id == connector_id, Connector.tenant_id == user.tenant_id)
     )
     if not conn:
         raise HTTPException(status_code=404, detail="Connector not found")
@@ -167,9 +174,13 @@ async def list_sync_jobs(
     )
     return [
         SyncJobResponse(
-            id=j.id, connector_id=j.connector_id, status=j.status.value,
-            started_at=j.started_at, completed_at=j.completed_at,
-            documents_synced=j.documents_synced, documents_failed=j.documents_failed,
+            id=j.id,
+            connector_id=j.connector_id,
+            status=j.status.value,
+            started_at=j.started_at,
+            completed_at=j.completed_at,
+            documents_synced=j.documents_synced,
+            documents_failed=j.documents_failed,
             error_message=j.error_message,
         )
         for j in result.all()

@@ -5,19 +5,19 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
 class RawDocument:
     """A document fetched from an external source."""
+
     external_id: str
     title: str
     content: bytes
     mime_type: str
-    source_url: Optional[str] = None
+    source_url: str | None = None
     metadata: dict = field(default_factory=dict)
-    last_modified: Optional[datetime] = None
+    last_modified: datetime | None = None
 
 
 @dataclass
@@ -38,7 +38,7 @@ class BaseConnector(ABC):
         ...
 
     @abstractmethod
-    async def sync(self, last_sync_at: Optional[datetime] = None) -> list[RawDocument]:
+    async def sync(self, last_sync_at: datetime | None = None) -> list[RawDocument]:
         """Fetch documents since last_sync_at (or all if None)."""
         ...
 

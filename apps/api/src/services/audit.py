@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,10 +14,10 @@ async def audit_log(
     db: AsyncSession,
     user: UserContext,
     action: str,
-    resource_type: Optional[str] = None,
-    resource_id: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
-    ip_address: Optional[str] = None,
+    resource_type: str | None = None,
+    resource_id: str | None = None,
+    details: dict[str, Any] | None = None,
+    ip_address: str | None = None,
 ):
     """Write an immutable audit log entry."""
     entry = AuditLog(

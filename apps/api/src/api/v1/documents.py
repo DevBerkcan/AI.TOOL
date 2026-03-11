@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import uuid
 from pathlib import Path
-from typing import Optional
 
 import structlog
 from arq import ArqRedis
@@ -14,7 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.dependencies import get_arq_pool, get_db
-from src.core.security import get_current_user, UserContext
+from src.core.security import UserContext, get_current_user
 from src.models.entities import Chunk, Document, DocumentStatus, SourceType
 from src.schemas.api import DocumentResponse, DocumentUploadResponse
 from src.services.audit import audit_log
@@ -76,19 +75,19 @@ async def upload_document(
     # Enqueue ingestion job
     await arq.enqueue_job("ingest_document", str(doc.id))
 
-    await audit_log(db, user, "document_upload", "document", str(doc.id), {"filename": file.filename})
-
-    return DocumentUploadResponse(
-        id=doc.id, status=doc.status.value, filename=file.filename
+    await audit_log(
+        db, user, "document_upload", "document", str(doc.id), {"filename": file.filename}
     )
+
+    return DocumentUploadResponse(id=doc.id, status=doc.status.value, filename=file.filename)
 
 
 @router.get("", response_model=list[DocumentResponse])
 async def list_documents(
     user: UserContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    connector_id: Optional[uuid.UUID] = Query(None),
-    status: Optional[str] = Query(None),
+    connector_id: uuid.UUID | None = Query(None),
+    status: str | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
@@ -133,16 +132,12 @@ async def get_document(
 ):
     """Get document details."""
     doc = await db.scalar(
-        select(Document).where(
-            Document.id == document_id, Document.tenant_id == user.tenant_id
-        )
+        select(Document).where(Document.id == document_id, Document.tenant_id == user.tenant_id)
     )
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    chunk_count = await db.scalar(
-        select(func.count(Chunk.id)).where(Chunk.document_id == doc.id)
-    )
+    chunk_count = await db.scalar(select(func.count(Chunk.id)).where(Chunk.document_id == doc.id))
     return DocumentResponse(
         id=doc.id,
         title=doc.title,
@@ -163,9 +158,7 @@ async def delete_document(
 ):
     """Delete a document and all its chunks/vectors."""
     doc = await db.scalar(
-        select(Document).where(
-            Document.id == document_id, Document.tenant_id == user.tenant_id
-        )
+        select(Document).where(Document.id == document_id, Document.tenant_id == user.tenant_id)
     )
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")

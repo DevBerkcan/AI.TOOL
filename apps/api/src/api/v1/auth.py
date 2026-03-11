@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC
 
 import msal
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.core.dependencies import get_db
-from src.core.security import get_current_user, UserContext
+from src.core.security import UserContext, get_current_user
 from src.models.entities import GroupMapping, Tenant, User, UserRole
 from src.schemas.api import UserResponse
 
@@ -82,9 +83,7 @@ async def callback(
 
     # Resolve role from group mappings
     role = UserRole.viewer  # fallback
-    mappings = await db.scalars(
-        select(GroupMapping).where(GroupMapping.tenant_id == tenant.id)
-    )
+    mappings = await db.scalars(select(GroupMapping).where(GroupMapping.tenant_id == tenant.id))
     role_priority = {UserRole.admin: 3, UserRole.user: 2, UserRole.viewer: 1}
     for mapping in mappings:
         if mapping.entra_group_id in groups:
@@ -99,17 +98,19 @@ async def callback(
         user.email = email
         user.display_name = name
         user.role = role
-        from datetime import datetime, timezone
-        user.last_login = datetime.now(timezone.utc)
+        from datetime import datetime
+
+        user.last_login = datetime.now(UTC)
     else:
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         user = User(
             tenant_id=tenant.id,
             entra_object_id=entra_object_id,
             email=email,
             display_name=name,
             role=role,
-            last_login=datetime.now(timezone.utc),
+            last_login=datetime.now(UTC),
         )
         db.add(user)
 
@@ -142,9 +143,7 @@ async def logout():
 @router.get("/me", response_model=UserResponse)
 async def me(user: UserContext = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Return current authenticated user."""
-    db_user = await db.scalar(
-        select(User).where(User.entra_object_id == user.sub)
-    )
+    db_user = await db.scalar(select(User).where(User.entra_object_id == user.sub))
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 

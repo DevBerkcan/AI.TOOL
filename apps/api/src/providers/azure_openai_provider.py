@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from openai import AsyncAzureOpenAI
 
 from src.providers.base import (
-    ChatProvider, ChatResponse, EmbeddingProvider, EmbeddingResponse,
-    Message, StreamChunk, Usage,
+    ChatProvider,
+    ChatResponse,
+    EmbeddingProvider,
+    EmbeddingResponse,
+    Message,
+    StreamChunk,
+    Usage,
 )
 
 
@@ -25,8 +30,11 @@ class AzureOpenAIChatProvider(ChatProvider):
         )
 
     async def complete(
-        self, messages: list[Message], model: str,
-        temperature: float = 0.7, max_tokens: int = 2000,
+        self,
+        messages: list[Message],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
     ) -> ChatResponse:
         response = await self.client.chat.completions.create(
             model=model,  # This is the deployment name in Azure
@@ -48,8 +56,11 @@ class AzureOpenAIChatProvider(ChatProvider):
         )
 
     async def stream(
-        self, messages: list[Message], model: str,
-        temperature: float = 0.7, max_tokens: int = 2000,
+        self,
+        messages: list[Message],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
     ) -> AsyncIterator[StreamChunk]:
         stream = await self.client.chat.completions.create(
             model=model,

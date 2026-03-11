@@ -3,15 +3,22 @@
 from __future__ import annotations
 
 import time
-from typing import Optional
 
 import structlog
 
 from src.core.config import settings
-from src.providers.base import ChatProvider, EmbeddingProvider, Message, StreamChunk, ChatResponse, Usage
-from src.providers.openai_provider import OpenAIChatProvider, OpenAIEmbeddingProvider
-from src.providers.azure_openai_provider import AzureOpenAIChatProvider, AzureOpenAIEmbeddingProvider
+from src.providers.azure_openai_provider import (
+    AzureOpenAIChatProvider,
+    AzureOpenAIEmbeddingProvider,
+)
+from src.providers.base import (
+    ChatProvider,
+    ChatResponse,
+    EmbeddingProvider,
+    Message,
+)
 from src.providers.claude_provider import ClaudeChatProvider
+from src.providers.openai_provider import OpenAIChatProvider, OpenAIEmbeddingProvider
 
 logger = structlog.get_logger()
 
@@ -58,7 +65,7 @@ class ProviderFactory:
     """Creates and manages AI provider instances."""
 
     @staticmethod
-    def get_chat_provider(provider_name: Optional[str] = None) -> ChatProvider:
+    def get_chat_provider(provider_name: str | None = None) -> ChatProvider:
         """Get a chat provider by name."""
         name = provider_name or settings.DEFAULT_CHAT_PROVIDER
 
@@ -76,7 +83,7 @@ class ProviderFactory:
             raise ValueError(f"Unknown chat provider: {name}")
 
     @staticmethod
-    def get_embedding_provider(provider_name: Optional[str] = None) -> EmbeddingProvider:
+    def get_embedding_provider(provider_name: str | None = None) -> EmbeddingProvider:
         """Get an embedding provider by name."""
         name = provider_name or settings.DEFAULT_EMBEDDING_PROVIDER
 
@@ -92,7 +99,7 @@ class ProviderFactory:
             raise ValueError(f"Unknown embedding provider: {name}")
 
     @staticmethod
-    def get_chat_model(provider_name: Optional[str] = None) -> str:
+    def get_chat_model(provider_name: str | None = None) -> str:
         """Get the default model name for a provider."""
         name = provider_name or settings.DEFAULT_CHAT_PROVIDER
         if name == "openai":
@@ -104,7 +111,7 @@ class ProviderFactory:
         return "gpt-4o"
 
     @staticmethod
-    def get_embedding_model(provider_name: Optional[str] = None) -> str:
+    def get_embedding_model(provider_name: str | None = None) -> str:
         """Get the default embedding model name."""
         name = provider_name or settings.DEFAULT_EMBEDDING_PROVIDER
         if name == "openai":
@@ -120,8 +127,8 @@ FALLBACK_ORDER = ["openai", "azure_openai", "claude"]
 
 async def get_chat_completion_with_fallback(
     messages: list[Message],
-    primary_provider: Optional[str] = None,
-    model: Optional[str] = None,
+    primary_provider: str | None = None,
+    model: str | None = None,
     temperature: float = 0.7,
     max_tokens: int = 2000,
 ) -> ChatResponse:

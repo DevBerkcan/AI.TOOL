@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.dependencies import get_db
-from src.core.security import get_current_user, require_role, UserContext
+from src.core.security import UserContext, get_current_user, require_role
 from src.models.entities import Feedback, FeedbackRating
 from src.schemas.api import FeedbackCreate, FeedbackResponse
 
@@ -48,8 +48,11 @@ async def list_feedback(
     result = await db.scalars(query)
     return [
         FeedbackResponse(
-            id=f.id, query_id=f.query_id, rating=f.rating.value,
-            comment=f.comment, created_at=f.created_at,
+            id=f.id,
+            query_id=f.query_id,
+            rating=f.rating.value,
+            comment=f.comment,
+            created_at=f.created_at,
         )
         for f in result.all()
     ]

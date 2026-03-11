@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sse_starlette.sse import EventSourceResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sse_starlette.sse import EventSourceResponse
 
 from src.core.dependencies import get_db
-from src.core.security import get_current_user, UserContext
+from src.core.security import UserContext, get_current_user
 from src.models.entities import QueryHistory
 from src.rag.pipeline import RAGPipeline
 from src.schemas.api import (
-    ChatRequest, ConversationDetail, ConversationListItem,
+    ChatRequest,
+    ConversationListItem,
 )
 
 logger = structlog.get_logger()

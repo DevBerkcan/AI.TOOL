@@ -56,15 +56,17 @@ async def embed_and_index_chunks(chunks: list[ChunkResult]) -> int:
             # Build Qdrant points
             points = []
             for chunk, vector in zip(batch, response.vectors):
-                points.append(PointStruct(
-                    id=chunk.chunk_id,
-                    vector=vector,
-                    payload={
-                        "content": chunk.content,
-                        "token_count": chunk.token_count,
-                        **chunk.metadata,
-                    },
-                ))
+                points.append(
+                    PointStruct(
+                        id=chunk.chunk_id,
+                        vector=vector,
+                        payload={
+                            "content": chunk.content,
+                            "token_count": chunk.token_count,
+                            **chunk.metadata,
+                        },
+                    )
+                )
 
             # Upsert to Qdrant
             await client.upsert(

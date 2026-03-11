@@ -5,17 +5,16 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.config import settings
 from src.providers.base import Message
 from src.providers.factory import ProviderFactory
-from src.rag.prompts import build_system_prompt, build_context_prompt, NO_ANSWER_INSTRUCTION
-from src.rag.retriever import retrieve_chunks
+from src.rag.prompts import build_context_prompt, build_system_prompt
 from src.rag.reranker import rerank_chunks
+from src.rag.retriever import retrieve_chunks
 
 logger = structlog.get_logger()
 
@@ -41,7 +40,15 @@ class RAGPipeline:
         )
 
         if not chunks:
-            yield {"event": "token", "data": json.dumps({"token": "Ich konnte leider keine relevanten Dokumente zu deiner Frage finden. Bitte stelle sicher, dass die entsprechenden Quellen bereits synchronisiert wurden."})}
+            no_docs_message = (
+                "Ich konnte leider keine relevanten Dokumente zu deiner Frage finden. "
+                "Bitte stelle sicher, dass die entsprechenden Quellen bereits "
+                "synchronisiert wurden."
+            )
+            yield {
+                "event": "token",
+                "data": json.dumps({"token": no_docs_message}),
+            }
             yield {"event": "done", "data": json.dumps({"sources": []})}
             return
 
@@ -67,7 +74,9 @@ class RAGPipeline:
         usage = None
 
         try:
-            async for chunk in provider.stream(messages, model=model, temperature=0.3, max_tokens=2000):
+            async for chunk in provider.stream(
+                messages, model=model, temperature=0.3, max_tokens=2000
+            ):
                 if chunk.delta:
                     full_answer += chunk.delta
                     yield {"event": "token", "data": json.dumps({"token": chunk.delta})}
@@ -94,6 +103,7 @@ class RAGPipeline:
 
         # 6. Save to query history
         from src.models.entities import QueryHistory
+
         qh = QueryHistory(
             tenant_id=self.tenant_id,
             user_id=self.user_id,

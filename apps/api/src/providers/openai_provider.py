@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import structlog
 from openai import AsyncOpenAI
 
 from src.providers.base import (
-    ChatProvider, ChatResponse, EmbeddingProvider, EmbeddingResponse,
-    Message, StreamChunk, Usage,
+    ChatProvider,
+    ChatResponse,
+    EmbeddingProvider,
+    EmbeddingResponse,
+    Message,
+    StreamChunk,
+    Usage,
 )
 
 logger = structlog.get_logger()
@@ -24,8 +29,11 @@ class OpenAIChatProvider(ChatProvider):
         self.client = AsyncOpenAI(api_key=api_key)
 
     async def complete(
-        self, messages: list[Message], model: str,
-        temperature: float = 0.7, max_tokens: int = 2000,
+        self,
+        messages: list[Message],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
     ) -> ChatResponse:
         response = await self.client.chat.completions.create(
             model=model,
@@ -47,8 +55,11 @@ class OpenAIChatProvider(ChatProvider):
         )
 
     async def stream(
-        self, messages: list[Message], model: str,
-        temperature: float = 0.7, max_tokens: int = 2000,
+        self,
+        messages: list[Message],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
     ) -> AsyncIterator[StreamChunk]:
         stream = await self.client.chat.completions.create(
             model=model,

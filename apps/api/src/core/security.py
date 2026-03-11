@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from typing import Optional
 
 import httpx
 import structlog
@@ -40,6 +39,7 @@ async def get_jwks() -> dict:
 # ── User Context ─────────────────────────────────────────────────────────
 class UserContext(BaseModel):
     """Authenticated user extracted from JWT."""
+
     sub: str
     email: str
     name: str

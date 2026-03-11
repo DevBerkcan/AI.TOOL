@@ -4,11 +4,18 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, Enum, ForeignKey, Index, Integer,
-    String, Text, func,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
@@ -17,19 +24,19 @@ from src.core.database import Base
 
 
 # ── Enums ────────────────────────────────────────────────────────────────
-class UserRole(str, enum.Enum):
+class UserRole(enum.StrEnum):
     admin = "admin"
     user = "user"
     viewer = "viewer"
 
 
-class SourceType(str, enum.Enum):
+class SourceType(enum.StrEnum):
     sharepoint = "sharepoint"
     confluence = "confluence"
     pdf_upload = "pdf_upload"
 
 
-class DocumentStatus(str, enum.Enum):
+class DocumentStatus(enum.StrEnum):
     pending = "pending"
     parsing = "parsing"
     chunking = "chunking"
@@ -38,19 +45,19 @@ class DocumentStatus(str, enum.Enum):
     error = "error"
 
 
-class SyncJobStatus(str, enum.Enum):
+class SyncJobStatus(enum.StrEnum):
     pending = "pending"
     running = "running"
     completed = "completed"
     failed = "failed"
 
 
-class FeedbackRating(str, enum.Enum):
+class FeedbackRating(enum.StrEnum):
     positive = "positive"
     negative = "negative"
 
 
-class ModelPurpose(str, enum.Enum):
+class ModelPurpose(enum.StrEnum):
     chat = "chat"
     embedding = "embedding"
     reranking = "reranking"
@@ -59,7 +66,9 @@ class ModelPurpose(str, enum.Enum):
 # ── Mixin ────────────────────────────────────────────────────────────────
 class TimestampMixin:
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 # ── Tenant ───────────────────────────────────────────────────────────────
@@ -82,7 +91,9 @@ class User(Base, TimestampMixin):
     __tablename__ = "user"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
     entra_object_id = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False)
     display_name = Column(String(255), nullable=False)
@@ -103,14 +114,14 @@ class GroupMapping(Base, TimestampMixin):
     __tablename__ = "group_mapping"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
     entra_group_id = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), nullable=False)
     description = Column(String(255))
 
-    __table_args__ = (
-        Index("ix_gm_tenant_group", "tenant_id", "entra_group_id", unique=True),
-    )
+    __table_args__ = (Index("ix_gm_tenant_group", "tenant_id", "entra_group_id", unique=True),)
 
 
 # ── Document ─────────────────────────────────────────────────────────────
@@ -118,8 +129,12 @@ class Document(Base, TimestampMixin):
     __tablename__ = "document"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
-    connector_id = Column(UUID(as_uuid=True), ForeignKey("connector.id", ondelete="SET NULL"), nullable=True)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
+    connector_id = Column(
+        UUID(as_uuid=True), ForeignKey("connector.id", ondelete="SET NULL"), nullable=True
+    )
     source_type = Column(Enum(SourceType), nullable=False)
     external_id = Column(String(512))
     title = Column(String(512), nullable=False)
@@ -146,8 +161,12 @@ class Chunk(Base, TimestampMixin):
     __tablename__ = "chunk"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
-    document_id = Column(UUID(as_uuid=True), ForeignKey("document.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
+    document_id = Column(
+        UUID(as_uuid=True), ForeignKey("document.id", ondelete="CASCADE"), nullable=False
+    )
     chunk_index = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
     token_count = Column(Integer)
@@ -167,7 +186,9 @@ class Connector(Base, TimestampMixin):
     __tablename__ = "connector"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
     type = Column(Enum(SourceType), nullable=False)
     name = Column(String(255), nullable=False)
     config = Column(JSONB, default=dict)  # encrypted in practice
@@ -184,8 +205,12 @@ class SyncJob(Base, TimestampMixin):
     __tablename__ = "sync_job"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
-    connector_id = Column(UUID(as_uuid=True), ForeignKey("connector.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
+    connector_id = Column(
+        UUID(as_uuid=True), ForeignKey("connector.id", ondelete="CASCADE"), nullable=False
+    )
     status = Column(Enum(SyncJobStatus), default=SyncJobStatus.pending, nullable=False)
     started_at = Column(DateTime(timezone=True))
     completed_at = Column(DateTime(timezone=True))
@@ -201,7 +226,9 @@ class QueryHistory(Base, TimestampMixin):
     __tablename__ = "query_history"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
     conversation_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     query_text = Column(Text, nullable=False)
@@ -227,8 +254,12 @@ class Feedback(Base, TimestampMixin):
     __tablename__ = "feedback"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
-    query_id = Column(UUID(as_uuid=True), ForeignKey("query_history.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
+    query_id = Column(
+        UUID(as_uuid=True), ForeignKey("query_history.id", ondelete="CASCADE"), nullable=False
+    )
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
     rating = Column(Enum(FeedbackRating), nullable=False)
     comment = Column(Text)
@@ -260,7 +291,9 @@ class ModelConfig(Base, TimestampMixin):
     __tablename__ = "model_config"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False
+    )
     purpose = Column(Enum(ModelPurpose), nullable=False)
     provider = Column(String(50), nullable=False)
     model_name = Column(String(100), nullable=False)
@@ -268,6 +301,4 @@ class ModelConfig(Base, TimestampMixin):
     is_primary = Column(Boolean, default=False)
     is_fallback = Column(Boolean, default=False)
 
-    __table_args__ = (
-        Index("ix_mc_tenant_purpose", "tenant_id", "purpose"),
-    )
+    __table_args__ = (Index("ix_mc_tenant_purpose", "tenant_id", "purpose"),)

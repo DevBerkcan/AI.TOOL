@@ -8,10 +8,10 @@ from arq.connections import RedisSettings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.v1 import auth, chat, connectors, documents, feedback, admin
+from src.api.v1 import admin, auth, chat, connectors, documents, feedback
 from src.core.config import settings
-from src.core.database import engine, Base
-from src.core.middleware import TenantMiddleware, RequestLoggingMiddleware
+from src.core.database import Base, engine
+from src.core.middleware import RequestLoggingMiddleware, TenantMiddleware
 
 logger = structlog.get_logger()
 

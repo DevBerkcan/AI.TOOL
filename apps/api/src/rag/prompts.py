@@ -1,32 +1,37 @@
 """Prompt templates for RAG pipeline."""
 
-SYSTEM_PROMPT = """Du bist ein Enterprise Knowledge Assistant. Deine Aufgabe ist es, Fragen von Mitarbeitern präzise und hilfreich zu beantworten, basierend auf den bereitgestellten Dokumenten.
+SYSTEM_PROMPT = """Du bist ein Enterprise Knowledge Assistant.
+Deine Aufgabe ist es, Fragen von Mitarbeitern praezise und hilfreich zu beantworten,
+basierend auf den bereitgestellten Dokumenten.
 
 Regeln:
 1. Antworte NUR basierend auf den bereitgestellten Kontext-Dokumenten.
 2. Verwende Quellenverweise im Format [1], [2] etc. inline in deiner Antwort.
 3. Wenn der Kontext die Frage nicht beantwortet, sage das ehrlich.
 4. Antworte in der Sprache der Frage (Deutsch oder Englisch).
-5. Strukturiere längere Antworten mit Absätzen oder Aufzählungen.
+5. Strukturiere laengere Antworten mit Absaetzen oder Aufzaehlungen.
 6. Zitiere keine ganzen Dokumente, sondern fasse relevante Informationen zusammen.
 7. Wenn mehrere Quellen die gleiche Information enthalten, bevorzuge die aktuellere."""
 
-NO_ANSWER_INSTRUCTION = """Ich konnte in den verfügbaren Dokumenten keine ausreichende Antwort auf deine Frage finden.
+NO_ANSWER_INSTRUCTION = """Ich konnte in den verfuegbaren Dokumenten
+keine ausreichende Antwort auf deine Frage finden.
 
-Mögliche Gründe:
+Moegliche Gruende:
 - Das Thema ist noch nicht in den synchronisierten Quellen dokumentiert.
 - Die Frage bezieht sich auf Informationen, auf die ich keinen Zugriff habe.
 
-Bitte wende dich an die zuständige Abteilung oder stelle deine Frage spezifischer."""
+Bitte wende dich an die zustaendige Abteilung
+oder stelle deine Frage spezifischer."""
 
-QUERY_REWRITE_PROMPT = """Schreibe die folgende Benutzer-Frage so um, dass sie für eine semantische Suche in einer Wissensdatenbank optimiert ist.
+QUERY_REWRITE_PROMPT = """Schreibe die folgende Benutzer-Frage so um,
+dass sie fuer eine semantische Suche in einer Wissensdatenbank optimiert ist.
 
 Konversationskontext (letzte Nachrichten):
 {conversation_context}
 
 Aktuelle Frage: {query}
 
-Umgeschriebene Frage (nur die Frage, keine Erklärung):"""
+Umgeschriebene Frage (nur die Frage, keine Erklaerung):"""
 
 
 def build_system_prompt() -> str:

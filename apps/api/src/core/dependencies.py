@@ -1,6 +1,6 @@
 """Shared FastAPI dependencies."""
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import redis.asyncio as aioredis
 from arq import ArqRedis

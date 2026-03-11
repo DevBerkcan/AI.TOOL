@@ -3,9 +3,14 @@
 import asyncio
 import uuid
 
-from src.core.database import async_session, engine, Base
+from src.core.database import Base, async_session, engine
 from src.models.entities import (
-    Tenant, User, UserRole, GroupMapping, ModelConfig, ModelPurpose,
+    GroupMapping,
+    ModelConfig,
+    ModelPurpose,
+    Tenant,
+    User,
+    UserRole,
 )
 
 
@@ -36,31 +41,41 @@ async def seed():
         db.add(admin)
 
         # Create group mappings
-        db.add(GroupMapping(tenant_id=tenant.id, entra_group_id="admins-group-id", role=UserRole.admin))
-        db.add(GroupMapping(tenant_id=tenant.id, entra_group_id="users-group-id", role=UserRole.user))
+        db.add(
+            GroupMapping(tenant_id=tenant.id, entra_group_id="admins-group-id", role=UserRole.admin)
+        )
+        db.add(
+            GroupMapping(tenant_id=tenant.id, entra_group_id="users-group-id", role=UserRole.user)
+        )
 
         # Create model configs
-        db.add(ModelConfig(
-            tenant_id=tenant.id,
-            purpose=ModelPurpose.chat,
-            provider="openai",
-            model_name="gpt-4o",
-            is_primary=True,
-        ))
-        db.add(ModelConfig(
-            tenant_id=tenant.id,
-            purpose=ModelPurpose.chat,
-            provider="claude",
-            model_name="claude-sonnet-4-20250514",
-            is_fallback=True,
-        ))
-        db.add(ModelConfig(
-            tenant_id=tenant.id,
-            purpose=ModelPurpose.embedding,
-            provider="openai",
-            model_name="text-embedding-3-small",
-            is_primary=True,
-        ))
+        db.add(
+            ModelConfig(
+                tenant_id=tenant.id,
+                purpose=ModelPurpose.chat,
+                provider="openai",
+                model_name="gpt-4o",
+                is_primary=True,
+            )
+        )
+        db.add(
+            ModelConfig(
+                tenant_id=tenant.id,
+                purpose=ModelPurpose.chat,
+                provider="claude",
+                model_name="claude-sonnet-4-20250514",
+                is_fallback=True,
+            )
+        )
+        db.add(
+            ModelConfig(
+                tenant_id=tenant.id,
+                purpose=ModelPurpose.embedding,
+                provider="openai",
+                model_name="text-embedding-3-small",
+                is_primary=True,
+            )
+        )
 
         await db.commit()
         print("✅ Seed data created successfully")

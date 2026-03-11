@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import uuid
 from dataclasses import dataclass
 
 import structlog
@@ -14,6 +13,7 @@ logger = structlog.get_logger()
 @dataclass
 class ChunkResult:
     """A single chunk with metadata."""
+
     chunk_id: str
     content: str
     chunk_index: int
@@ -48,26 +48,30 @@ def chunk_document(
             continue
 
         # Deterministic chunk ID
-        chunk_hash = hashlib.sha256(f"{document_id}:{i}:{chunk_text[:100]}".encode()).hexdigest()[:16]
+        chunk_hash = hashlib.sha256(f"{document_id}:{i}:{chunk_text[:100]}".encode()).hexdigest()[
+            :16
+        ]
         chunk_id = f"{document_id}_{chunk_hash}"
 
         # Rough token count (1 token ≈ 4 chars for English/German)
         token_count = len(chunk_text) // 4
 
-        results.append(ChunkResult(
-            chunk_id=chunk_id,
-            content=chunk_text.strip(),
-            chunk_index=i,
-            token_count=token_count,
-            metadata={
-                "document_id": document_id,
-                "tenant_id": tenant_id,
-                "title": title,
-                "source_url": source_url,
-                "source_type": source_type,
-                "chunk_index": i,
-            },
-        ))
+        results.append(
+            ChunkResult(
+                chunk_id=chunk_id,
+                content=chunk_text.strip(),
+                chunk_index=i,
+                token_count=token_count,
+                metadata={
+                    "document_id": document_id,
+                    "tenant_id": tenant_id,
+                    "title": title,
+                    "source_url": source_url,
+                    "source_type": source_type,
+                    "chunk_index": i,
+                },
+            )
+        )
 
     logger.info("Chunking complete", document_id=document_id, chunks=len(results))
     return results

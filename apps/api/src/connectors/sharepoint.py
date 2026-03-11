@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 import httpx
 import structlog
@@ -67,7 +66,7 @@ class SharePointConnector(BaseConnector):
             logger.error("SharePoint connect failed", error=str(e))
             return False
 
-    async def sync(self, last_sync_at: Optional[datetime] = None) -> list[RawDocument]:
+    async def sync(self, last_sync_at: datetime | None = None) -> list[RawDocument]:
         """Sync documents from SharePoint library."""
         token = await self._get_token()
         documents = []
@@ -116,20 +115,31 @@ class SharePointConnector(BaseConnector):
                             )
                             content = file_resp.content
 
-                        documents.append(RawDocument(
-                            external_id=item["id"],
-                            title=name,
-                            content=content,
-                            mime_type=item.get("file", {}).get("mimeType", "application/octet-stream"),
-                            source_url=item.get("webUrl"),
-                            metadata={
-                                "size": item.get("size"),
-                                "created_by": item.get("createdBy", {}).get("user", {}).get("displayName"),
-                                "last_modified_by": item.get("lastModifiedBy", {}).get("user", {}).get("displayName"),
-                            },
-                            last_modified=datetime.fromisoformat(item["lastModifiedDateTime"].replace("Z", "+00:00"))
-                            if "lastModifiedDateTime" in item else None,
-                        ))
+                        documents.append(
+                            RawDocument(
+                                external_id=item["id"],
+                                title=name,
+                                content=content,
+                                mime_type=item.get("file", {}).get(
+                                    "mimeType", "application/octet-stream"
+                                ),
+                                source_url=item.get("webUrl"),
+                                metadata={
+                                    "size": item.get("size"),
+                                    "created_by": item.get("createdBy", {})
+                                    .get("user", {})
+                                    .get("displayName"),
+                                    "last_modified_by": item.get("lastModifiedBy", {})
+                                    .get("user", {})
+                                    .get("displayName"),
+                                },
+                                last_modified=datetime.fromisoformat(
+                                    item["lastModifiedDateTime"].replace("Z", "+00:00")
+                                )
+                                if "lastModifiedDateTime" in item
+                                else None,
+                            )
+                        )
 
                 # Follow pagination or save delta link
                 url = data.get("@odata.nextLink")
@@ -142,7 +152,9 @@ class SharePointConnector(BaseConnector):
     async def get_status(self) -> ConnectorStatus:
         try:
             connected = await self.connect({})
-            return ConnectorStatus(is_connected=connected, message="OK" if connected else "Connection failed")
+            return ConnectorStatus(
+                is_connected=connected, message="OK" if connected else "Connection failed"
+            )
         except Exception as e:
             return ConnectorStatus(is_connected=False, message=str(e))
 

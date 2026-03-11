@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 import structlog
 
@@ -13,6 +12,7 @@ logger = structlog.get_logger()
 @dataclass
 class ParsedDocument:
     """Output of document parsing."""
+
     title: str
     content: str
     metadata: dict
@@ -74,6 +74,7 @@ async def _parse_pdf(content: bytes, filename: str, source_type: str) -> ParsedD
 async def _parse_docx(content: bytes, filename: str, source_type: str) -> ParsedDocument:
     """Parse DOCX using python-docx."""
     import io
+
     from docx import Document as DocxDocument
 
     doc = DocxDocument(io.BytesIO(content))
