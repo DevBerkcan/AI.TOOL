@@ -1,4 +1,4 @@
-# Enterprise Knowledge Copilot & Automation Platform
+# RealCore Knowledge AI
 
 AI-powered knowledge search and automation for enterprises.
 Stack: Next.js · FastAPI · Azure · Qdrant · Entra ID
@@ -21,7 +21,7 @@ make dev
 ## Project Structure
 
 ```
-knowledge-copilot/
+realcore-knowledge-ai/
 ├── apps/
 │   ├── api/          # FastAPI Backend (Python)
 │   └── web/          # Next.js Frontend (TypeScript)

@@ -1,4 +1,4 @@
-/** API client for Knowledge Copilot backend. */
+/** API client for RealCore Knowledge AI backend. */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 

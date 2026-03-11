@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # ── App ──
-    APP_NAME: str = "knowledge-copilot"
+    APP_NAME: str = "realcore-knowledge-ai"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     LOG_LEVEL: str = "DEBUG"

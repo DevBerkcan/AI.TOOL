@@ -27,7 +27,7 @@ export default function ChatPage() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="h-14 border-b border-slate-800 flex items-center px-4 justify-between shrink-0">
-          <h1 className="text-sm font-medium text-slate-300">Knowledge Copilot</h1>
+          <h1 className="text-sm font-medium text-slate-300">RealCore Knowledge AI</h1>
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">
               GPT-4o

@@ -1,7 +1,7 @@
 [project]
-name = "knowledge-copilot-api"
+name = "realcore-knowledge-ai-api"
 version = "0.1.0"
-description = "Enterprise Knowledge Copilot Backend"
+description = "RealCore Knowledge AI Backend"
 requires-python = ">=3.12"
 
 dependencies = [

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Knowledge Copilot',
+  title: 'RealCore Knowledge AI',
   description: 'Enterprise AI Knowledge Search & Automation',
 };
 

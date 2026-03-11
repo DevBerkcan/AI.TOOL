@@ -1,4 +1,4 @@
-/** Shared types for the Knowledge Copilot frontend. */
+/** Shared types for the RealCore Knowledge AI frontend. */
 
 export interface User {
   id: string;

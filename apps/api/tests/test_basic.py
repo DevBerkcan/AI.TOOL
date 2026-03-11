@@ -12,7 +12,7 @@ def test_health():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["service"] == "knowledge-copilot-api"
+    assert data["service"] == "realcore-knowledge-ai-api"
 
 
 def test_provider_factory():
